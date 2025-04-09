@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # import numpy as np
 import casadi as ca
 
@@ -46,12 +48,12 @@ class TECSControl:
         # Night Vapor Sim
         if self.args == 3:
             # Thrust gains
-            K_thrustp = 0.15
-            K_thrusti = 0.7
+            K_thrustp = 0.05
+            K_thrusti = 0.17
 
             # Pitch gains
-            K_pitchp = 0.2
-            K_pitchi = 0.5
+            K_pitchp = 0.05
+            K_pitchi = 0.16
 
             # Integral error bounds
             norm_Es_dot_integral_max = 4.5
@@ -60,7 +62,7 @@ class TECSControl:
             # Set Trim
             # trim_thtl = 0.5 # Trim throttle condition
             # trim_elev = 0 # Trim Elevator
-            trim_thrust = 2.4  # Thrust trim for cruise
+            trim_thrust = 3.0  # Thrust trim for cruise
 
             # Weight
             weight = 0.5 * self.g  # mass = 0.5
@@ -159,8 +161,8 @@ class TECSControl:
 
             # Rudder gain XTrack
             K_deltap = 0.35
-            K_deltai = 0.00
-            K_deltad = 0.5
+            K_deltai = 0.25
+            K_deltad = 0.20
 
             # Pitch rate gain
             K_q = 1
@@ -168,12 +170,12 @@ class TECSControl:
             # Integral error bounds
             pitch_integral_max = 0.5
             thrust_integral_max = 1
-            r_integral_max = 0.2
+            r_integral_max = 0.4
             xtrack_integral_max = 1.0
 
             # Set Trim
             trim_thtl = 0.2  # Trim throttle condition
-            trim_elev = 0.0  # -0.1 # Trim Elevator
+            trim_elev = 0.2  # -0.1 # Trim Elevator
             trim_rud = 0  # Trim on Rudder
 
             # Weight
@@ -192,7 +194,7 @@ class TECSControl:
             self.error_pitch_integral = -pitch_integral_max
 
         # Control commands for elevator
-        elev = trim_elev + -1 * (
+        elev = trim_elev + (
             K_elevp * error_pitch + K_elevi * self.error_pitch_integral
         )  # + K_q * error_q
 
@@ -210,7 +212,6 @@ class TECSControl:
         # Compute yaw
         err_yaw = r_heading - yaw  # error of haeding angle
         err_yaw = (err_yaw + ca.pi) % (2 * ca.pi) - ca.pi  # wrapper
-        print(f"err before wrap: {err_yaw:0.2f}")
 
         # err_yaw = ca.fmod(err_yaw + ca.pi,2*ca.pi) - ca.pi # Casadi Wrapper
 
@@ -239,8 +240,8 @@ class TECSControl:
         roll_integral_max = 0.2
 
         # Gains
-        K_rollp = 0.2
-        K_rolli = 0.2
+        K_rollp = 0.4
+        K_rolli = 0.4
 
         # error_r_deriv = (error_r - self.error_r_last)/self.dt
         self.error_roll_last = error_roll

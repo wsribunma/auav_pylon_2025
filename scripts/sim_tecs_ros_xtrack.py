@@ -9,8 +9,8 @@ from std_msgs.msg import Float32MultiArray
 from tf_transformations import euler_from_quaternion
 import casadi as ca
 import numpy as np
-from tecs_xtrack_sample import TECSControl
-from cross_tracker import *
+from auav_pylon_2025.tecs_xtrack_sample import TECSControl
+from auav_pylon_2025.cross_tracker import *
 
 
 def wrap(x):
@@ -18,7 +18,7 @@ def wrap(x):
 
 
 dt = 0.01
-alt = 3  # Desired Cruising altitude (m)
+alt = 5#3  # Desired Cruising altitude (m)
 
 ## SIM Coordinate Waypoints
 x0 = 3.2
@@ -78,6 +78,8 @@ class PIDPublisher(Node):
         self.current_WP_ind = 0  # Current Waypoint Index
         self.last_WP_ind = 1  # Last Waypoint Index
         self.wpt_planner = XTrack_NAV(self.dt, control_point, self.current_WP_ind)
+        self.wpt_planner.path_distance_buf = 10.0
+        self.wpt_planner.wpt_switching_distance = 10.0
         self.flight_mode = "takeoff"
         self.pub_flight_mode = self.create_publisher(String, "flight_mode", 10)
         self.takeoff_time = 0.0
@@ -316,7 +318,7 @@ class PIDPublisher(Node):
 
         ######################################## FLIGHT MODE HANDLING ####################################
         flight_mode_msg = String()
-        if (self.z <= 0.2) and self.end_cruise == False:
+        if (self.z <= 1.0) and self.end_cruise == False:
             new_mode = "takeoff"
         else:
             new_mode = "airborne"
@@ -344,18 +346,27 @@ class PIDPublisher(Node):
                 self.throttle = 0.7
             self.throttle = ca.if_else(self.throttle > 1, 1.0, self.throttle)
             self.rudder = 0.0  # Rudder
-            self.elev = -0.2
+            self.elev = 0.2
             self.ail_roll = 0.0  # Aileron
+
+        # Enforce Looping in cruise
+        if self.current_WP_ind+3 == self.last_WP_ind: 
+            self.current_WP_ind = 2 # go back to cruise altitude waypoint
+            self.end_cruise = False
+            self.wpt_planner = XTrack_NAV(self.dt, control_point, self.current_WP_ind)
+
+            print("Continueing circuit...Returning to Waypoint %s" %(self.current_WP_ind))
 
         if self.flight_mode == "airborne":
             if (
-                self.current_WP_ind == self.last_WP_ind
+                self.current_WP_ind +2 == self.last_WP_ind
             ):  ## TODO Implement "land" waypoint mode
-                self.end_cruise = True
-                self.rudder = 0.0
-                self.elev = 0.0
-                self.ail_roll = 0.0
-                self.throttle = 0.0
+                self.end_cruise = False
+                self.current_WP_ind = 3
+                # self.rudder = 0.0
+                # self.elev = 0.0
+                # self.ail_roll = 0.0
+                # self.throttle = 0.0
                 print("ending Cruise")
             else:
                 v_array = [self.vx_est, self.vy_est, self.vz_est]

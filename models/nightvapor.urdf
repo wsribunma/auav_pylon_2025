@@ -13,7 +13,7 @@
     <visual>
       <origin xyz="-0.5 -0. 0.02" rpy="0 0 1.57"/>
       <geometry>
-        <mesh filename="file:///home/wsribunm/ros2_ws/src/nightvapor/nightvapor_description/meshes/fullnightvapor.dae" scale="5 5 5" />
+         <mesh filename="packages:///auav_pylon_2025/models/fullnightvapor.dae" scale="5 5 5" />
       </geometry>
     </visual>
   </link>
