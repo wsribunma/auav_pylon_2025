@@ -37,6 +37,18 @@ control_point = [
     (xf, yf, 0.1),
 ]
 
+## PURT Circuit
+x0 = -3#1.6
+y0 = 3.2#2.54
+# theta0 = 2.97
+# xf = 0.0
+# yf = 10.0
+xf = -3#1.6
+yf = 3.2#2.54
+#
+
+control_point = [(x0, y0, alt), (-14.0, 4.00,alt), (-13.5, 16.0,alt), (-1.5, 16.5,alt),(-1.5, 5.0,alt), (xf, yf,alt)] #Square circuit, const altitude
+
 # Get coordinates for reference line
 ref_x_list = [point[0] for point in control_point]
 ref_y_list = [point[1] for point in control_point]
@@ -78,8 +90,8 @@ class PIDPublisher(Node):
         self.current_WP_ind = 0  # Current Waypoint Index
         self.last_WP_ind = 1  # Last Waypoint Index
         self.wpt_planner = XTrack_NAV(self.dt, control_point, self.current_WP_ind)
-        self.wpt_planner.path_distance_buf = 10.0
-        self.wpt_planner.wpt_switching_distance = 10.0
+        self.wpt_planner.path_distance_buf = 2.0
+        self.wpt_planner.wpt_switching_distance = 4.0
         self.flight_mode = "takeoff"
         self.pub_flight_mode = self.create_publisher(String, "flight_mode", 10)
         self.takeoff_time = 0.0
@@ -318,7 +330,7 @@ class PIDPublisher(Node):
 
         ######################################## FLIGHT MODE HANDLING ####################################
         flight_mode_msg = String()
-        if (self.z <= 1.0) and self.end_cruise == False:
+        if (self.z <= 0.5) and self.end_cruise == False:
             new_mode = "takeoff"
         else:
             new_mode = "airborne"
@@ -346,12 +358,12 @@ class PIDPublisher(Node):
                 self.throttle = 0.7
             self.throttle = ca.if_else(self.throttle > 1, 1.0, self.throttle)
             self.rudder = 0.0  # Rudder
-            self.elev = 0.2
+            self.elev = 0.15
             self.ail_roll = 0.0  # Aileron
 
         # Enforce Looping in cruise
-        if self.current_WP_ind+3 == self.last_WP_ind: 
-            self.current_WP_ind = 2 # go back to cruise altitude waypoint
+        if self.current_WP_ind == self.last_WP_ind: 
+            self.current_WP_ind = 0 # go back to cruise altitude waypoint
             self.end_cruise = False
             self.wpt_planner = XTrack_NAV(self.dt, control_point, self.current_WP_ind)
 
@@ -359,10 +371,10 @@ class PIDPublisher(Node):
 
         if self.flight_mode == "airborne":
             if (
-                self.current_WP_ind +2 == self.last_WP_ind
+                self.current_WP_ind == self.last_WP_ind
             ):  ## TODO Implement "land" waypoint mode
                 self.end_cruise = False
-                self.current_WP_ind = 3
+                self.current_WP_ind = 0
                 # self.rudder = 0.0
                 # self.elev = 0.0
                 # self.ail_roll = 0.0
@@ -450,17 +462,17 @@ class PIDPublisher(Node):
         joy_msg.axes = [0.0] * 5
 
         # Night Vapor 3 Channels
-        # joy_msg.axes[0] = self.throttle
-        # joy_msg.axes[1] = delta
-        # joy_msg.axes[2] = elev
+        # joy_msg.axes[0] = self.throttle # Throttle
+        # joy_msg.axes[1] = delta # Rudder
+        # joy_msg.axes[2] = elev # Elevator
         # joy_msg.axes[3] = 0
         # joy_msg.axes[4] = 1900 # Force onboard stabilizing
 
-        # Simulator
-        joy_msg.axes[0] = self.throttle
-        joy_msg.axes[1] = self.ail_roll
-        joy_msg.axes[2] = self.elev
-        joy_msg.axes[3] = self.rudder
+        # Simulator 3-Channel
+        joy_msg.axes[0] = self.throttle # Throttle
+        joy_msg.axes[1] = self.rudder + -1 * self.ail_roll #Rudder Input + "ail_roll" represents auto stabilizer
+        joy_msg.axes[2] = self.elev #Elevator
+        joy_msg.axes[3] = 0
         joy_msg.axes[4] = 1900  # Force onboard stabilizing
 
         self.pub_joy.publish(joy_msg)

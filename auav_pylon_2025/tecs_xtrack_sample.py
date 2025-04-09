@@ -21,9 +21,7 @@ class TECSControl:
         self.dt = dt
         self.g = 9.81
         self.args = args  # Vehicle selection
-        self.error_norm_Es_dot_integral = (
-            0  # Integral of error of specific error rate normalized by velocity
-        )
+        self.error_norm_Es_dot_integral = 0  # Integral of error of specific error rate normalized by velocity
         self.error_dist_term_integral = 0  # Integral of error of (V_E_dot/g - gamma_E) term from energy rate distribution adjustment
         self.error_pitch_integral = 0  # Integral of error of pitch
         self.error_thrust_integral = 0  # Integral of error of thrust
@@ -70,7 +68,7 @@ class TECSControl:
         #######################################################
         # Envelope Protection Feature
         thr_max = 4.5  # Maximum Thrust
-        drag = 1.0  # Maximum Drag estimate TODO drag can be a function of velocity
+        drag = 1.0  # Maximum Drag estimate TODO Quantify max drag
         # r_gamma = np.clip(r_gamma, -drag/weight, (thr_max-drag)/weight)
         r_V_dot = ca.fmax(
             ca.fmin(r_V_dot, (thr_max - drag) / weight), -drag / weight
@@ -154,11 +152,6 @@ class TECSControl:
             K_elevp = 0.3
             K_elevi = 0.1
 
-            # Rudder gains WP NAV
-            # K_deltap= 0.25#0.3
-            # K_deltai = 0.00
-            # K_deltad = 0.1
-
             # Rudder gain XTrack
             K_deltap = 0.35
             K_deltai = 0.25
@@ -198,7 +191,6 @@ class TECSControl:
             K_elevp * error_pitch + K_elevi * self.error_pitch_integral
         )  # + K_q * error_q
 
-        # elev = np.clip(elev, -1,1 ) #Saturation
         elev = ca.fmax(ca.fmin(elev, 1), -1)  # Limit function for Casadi
 
         # -------------------Throttle Control-------------------#
@@ -212,8 +204,6 @@ class TECSControl:
         # Compute yaw
         err_yaw = r_heading - yaw  # error of haeding angle
         err_yaw = (err_yaw + ca.pi) % (2 * ca.pi) - ca.pi  # wrapper
-
-        # err_yaw = ca.fmod(err_yaw + ca.pi,2*ca.pi) - ca.pi # Casadi Wrapper
 
         print(f"r_heading: {r_heading:0.2f}, yaw: {yaw:0.2f}, err_yaw: {err_yaw:0.2f}")
 
@@ -231,7 +221,6 @@ class TECSControl:
             + K_deltai * self.error_r_integral
             + K_deltad * error_r_deriv
         )
-        # rud = np.clip(rud,-1,1) # Saturation for Heading Control Input
         rud = ca.fmax(ca.fmin(rud, 1), -1)
 
         # -------------------Roll Control-------------------#
@@ -240,8 +229,8 @@ class TECSControl:
         roll_integral_max = 0.2
 
         # Gains
-        K_rollp = 0.4
-        K_rolli = 0.4
+        K_rollp = 0.8
+        K_rolli = 0.8
 
         # error_r_deriv = (error_r - self.error_r_last)/self.dt
         self.error_roll_last = error_roll

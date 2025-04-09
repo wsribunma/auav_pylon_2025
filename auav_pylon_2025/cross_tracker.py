@@ -34,9 +34,6 @@ class XTrack_NAV:
             4.0  # Look ahead for 3 m along track and jump to next waypoint
         )
         self.path_distance_buf = 2.0  # Cross-track distance buffer
-        self.time_aheadTrack = (
-            2.0  # Time to lookahead to anticipate turn for controller
-        )
 
     def get_desired_flight(
         self, next_wpt, current_pose, Vx_speed, Vy_speed, verbose=False
@@ -158,7 +155,7 @@ class XTrack_NAV:
     def check_arrived(self, along_track_err, verbose=False):
         # Horizontal Distance Waypoint checker
         # Check based on along-track error
-        if np.abs(along_track_err) < self.wpt_switching_distance:
+        if along_track_err < self.wpt_switching_distance:
             self.current_WP_ind += 1
             print(f"Waypoint reached, going to waypoint {self.current_WP_ind}...")
 
