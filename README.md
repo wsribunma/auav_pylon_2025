@@ -4,7 +4,7 @@
 
 
 
-We are hosting a Purdue internal Pylon racing competition at PURT on Purdue Aviation Day, April 5, 2025.
+We are hosting a Purdue internal Pylon racing competition at PURT on April 12, 2025.
 
 Teams will be scored on the fastest laptime around a rectangular course in PURT. The course size will be approximately 50'x50'.
 
@@ -33,8 +33,9 @@ To install the simulator alone in a single workspace:
 mkdir nvp_ros2_ws/src
 cd nvp_ros2_ws/src
 git clone https://github.com/CogniPilot/cyecca.git
+git clone https://github.com/wsribunma/auav_pylon_2025.git 
 cd ..
-colcon build
+colcon build --symlink-install
 ```
 
 Source the workspace
@@ -44,26 +45,19 @@ source install/setup.bash
 
 Running the simulator
 ```
-ros2 launch cyecca fixedwing_sim.xml
+ros2 launch auav_pylon_2025 fixedwing_sim.xml
 ```
+The launch script should launch a simulation with RVIZ2 visualizer by default.
 
-The real-time simulation can be viewed from RVIZ2 or other ROS2 topic visualizer. Current simulation requires the use of a joystick controller (Logitech f310). The "A" button serves to cycle between manual control mode or auto control mode.
+The real-time simulation can be viewed from RVIZ2 or other ROS2 topic visualizer. 
 
-We will soon release a version that allows the use of keyboard command to cycle between modes.
+Current simulation allows an optional use of a joystick controller (Logitech f310). The "A" button will toggle the auto model, and "B" button will toggle the manual mode. To enable joystick commands, add a condition ```use_joystick:=true``` when launching the fixedwing_sim.xml script
 
 
-## Running The Sample Solution
-Clone or download the sample solution:
+## Common Issues
+If your simulator doesn't automatically takeoff, it may be that you are on "manual" mode. 
+* Fix: go to your "ros2_ws/src/cyecca/scripts/fixedwing_sim.py" and set ```self.input_mode = "auto"```
 
-```
-git clone https://github.com/wsribunma/auav_pylon_2025.git 
-```
-
-Running the sample solution can be done by
-
-```python
-python3 sim_tecs_ros_xtrack.py
-```
 
 *Note* By default, the sample solution is set to take off when below a given altitude to force the fixed-wing simulator to take off from the ground.
 
